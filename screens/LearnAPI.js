@@ -12,21 +12,44 @@ import {
 export default function LearnAPI() {
   //   render() {
   const [postList, setPostList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [isListEnd, setIsListEnd] = useState(false);
 
-  const fetchData = async (limit = 10) => {
-    const response = await fetch(
-      `https://jsonplaceholder.typicode.com/posts?_limit=${limit}`,
-    );
-    const data = await response.json();
-    setPostList(data);
-    setIsLoading(false);
+  const fetchData = async () => {
+    console.log('offset now:', offset);
+    if (!isLoading && !isListEnd) {
+      setIsLoading(true);
+      const uriPost = `https://dummyjson.com/products?limit=10&skip=${offset}&select=title,description`;
+      console.log('url nya:', uriPost);
+
+      fetch(uriPost)
+        .then(response => response.json())
+        .then(responseJson => {
+          console.log('apa response json', responseJson);
+          if (responseJson.products.length > 0) {
+            setOffset(offset + 10);
+            setPostList([...postList, ...responseJson.products]);
+          } else {
+            setIsListEnd(true);
+          }
+          setIsLoading(false);
+        })
+        .catch(error => {
+          console.log('Error:', error);
+        });
+      // const data = await response.json();
+      // console.log('apa ini', data.products);
+
+      // setPostList(data.products);
+      // setIsLoading(false);
+    }
   };
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchData(20);
+    fetchData();
     setRefreshing(false);
   };
 
@@ -34,14 +57,14 @@ export default function LearnAPI() {
     fetchData();
   }, []);
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="0000ff" />
-        <Text>Loading...</Text>
-      </SafeAreaView>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <SafeAreaView style={styles.loadingContainer}>
+  //       <ActivityIndicator size="large" color="0000ff" />
+  //       <Text>Loading...</Text>
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,7 +75,7 @@ export default function LearnAPI() {
             return (
               <View style={styles.card}>
                 <Text style={styles.titleText}>{item.title}</Text>
-                <Text style={styles.bodyText}>{item.body}</Text>
+                <Text style={styles.bodyText}>{item.description}</Text>
               </View>
             );
           }}
@@ -60,10 +83,18 @@ export default function LearnAPI() {
           ListEmptyComponent={<Text>No Posts Found</Text>}
           ListHeaderComponent={<Text style={styles.headerText}>Post List</Text>}
           ListFooterComponent={
-            <Text style={styles.footerText}>End of List</Text>
+            <View>
+              {isLoading ? (
+                <ActivityIndicator color="black" style={{margin: 15}} />
+              ) : (
+                <Text style={styles.footerText}>End of List</Text>
+              )}
+            </View>
           }
           refreshing={refreshing}
           onRefresh={handleRefresh}
+          onEndReached={fetchData}
+          onEndReachedThreshold={0.5}
         />
       </View>
     </SafeAreaView>
