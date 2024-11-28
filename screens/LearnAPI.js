@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, {Component, useEffect, useState} from 'react';
 import {
   Text,
@@ -24,26 +25,36 @@ export default function LearnAPI() {
       const uriPost = `https://dummyjson.com/products?limit=10&skip=${offset}&select=title,description`;
       console.log('url nya:', uriPost);
 
-      fetch(uriPost)
-        .then(response => response.json())
-        .then(responseJson => {
-          console.log('apa response json', responseJson);
-          if (responseJson.products.length > 0) {
-            setOffset(offset + 10);
-            setPostList([...postList, ...responseJson.products]);
-          } else {
-            setIsListEnd(true);
-          }
-          setIsLoading(false);
-        })
-        .catch(error => {
-          console.log('Error:', error);
-        });
-      // const data = await response.json();
-      // console.log('apa ini', data.products);
+      try {
+        const response = await axios.get(uriPost);
+        const data = response.data;
+        console.log('dari axios nih', data);
+        if (data.products.length > 0) {
+          setOffset(offset + 10);
+          setPostList([...postList, ...data.products]);
+        } else {
+          setIsListEnd(true);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.log('Error:', error);
+      }
 
-      // setPostList(data.products);
-      // setIsLoading(false);
+      // fetch(uriPost)
+      //   .then(response => response.json())
+      //   .then(responseJson => {
+      //     console.log('apa response json', responseJson);
+      //     if (responseJson.products.length > 0) {
+      //       setOffset(offset + 10);
+      //       setPostList([...postList, ...responseJson.products]);
+      //     } else {
+      //       setIsListEnd(true);
+      //     }
+      //     setIsLoading(false);
+      //   })
+      //   .catch(error => {
+      //     console.log('Error:', error);
+      //   });
     }
   };
 
